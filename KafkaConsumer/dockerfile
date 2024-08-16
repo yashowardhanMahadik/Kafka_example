@@ -1,0 +1,30 @@
+# Stage 1: Build the Spring Boot app using Maven and JDK 21
+FROM maven:3.9.8-eclipse-temurin-21 AS build
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the pom.xml file to the container and download dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline
+
+# Copy the source code into the container
+COPY src ./src
+
+# Build the application and generate the JAR file in KafkaConsumer/target folder
+RUN mvn clean package -DskipTests
+
+# Stage 2: Run the Spring Boot app using a lightweight JDK 21 image
+FROM openjdk:21-jdk-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the JAR file from the build stage to the runtime stage
+COPY --from=build /app/target/*.jar /app/kafka-consumer.jar
+
+# Expose the application port
+EXPOSE 9292
+
+# Run the Spring Boot application
+ENTRYPOINT ["java", "-jar", "kafka-consumer.jar"]

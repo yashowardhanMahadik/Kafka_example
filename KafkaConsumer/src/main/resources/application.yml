@@ -1,0 +1,7 @@
+server:
+  port: 9292
+spring:
+  kafka:
+    consumer:
+      group-id: YM-group-3
+
